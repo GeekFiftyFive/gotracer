@@ -30,10 +30,31 @@ func TestAddVector(t *testing.T) {
 		want   Vector3
 	}{
 		{"Should add positive whole vectors", vec3{1.0, 2.0, 3.0}, vec3{1.0, 1.0, 1.0}, vec3{2.0, 3.0, 4.0}},
+		{"Should add positive decimal vectors", vec3{1.5, 2.5, 3.5}, vec3{1.5, 1.5, 1.5}, vec3{3.0, 4.0, 5.0}},
+		{"Should add negative vectors", vec3{-1.5, -2.5, -3.5}, vec3{1.5, 1.5, 1.5}, vec3{0.0, -1.0, -2.0}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ans := tt.input1.AddVector(tt.input2)
+			assertVector(t, tt.want, ans)
+		})
+	}
+}
+
+func TestSubtractVector(t *testing.T) {
+	var tests = []struct {
+		name   string
+		input1 Vector3
+		input2 Vector3
+		want   Vector3
+	}{
+		{"Should subtract positive whole vectors", vec3{1.0, 2.0, 3.0}, vec3{1.0, 1.0, 1.0}, vec3{0.0, 1.0, 2.0}},
+		{"Should subtract positive decimal vectors", vec3{1.5, 2.5, 3.5}, vec3{1.5, 1.5, 1.5}, vec3{0.0, 1.0, 2.0}},
+		{"Should subtract negative vectors", vec3{-1.5, -2.5, -3.5}, vec3{1.5, 1.5, 1.5}, vec3{-3.0, -4.0, -5.0}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ans := tt.input1.SubtractVector(tt.input2)
 			assertVector(t, tt.want, ans)
 		})
 	}
