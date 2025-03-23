@@ -3,9 +3,14 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"log"
+	"os"
 )
 
 func main() {
+	// Logger
+	logger := log.New(os.Stderr, "", 0)
+
 	// Image
 	imageWidth, imageHeight := 256, 256
 
@@ -14,6 +19,7 @@ func main() {
 	writer.Write(fmt.Appendf(nil, "P3\n%d %d\n255\n", imageWidth, imageHeight))
 
 	for j := range imageHeight {
+		logger.Printf("Scanlines remaining: %d\n", imageHeight-j)
 		for i := range imageWidth {
 			r := float64(i) / (float64(imageWidth) - 1)
 			g := float64(j) / (float64(imageHeight) - 1)
