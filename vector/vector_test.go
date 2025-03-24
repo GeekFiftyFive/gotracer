@@ -179,3 +179,20 @@ func TestCross(t *testing.T) {
 		})
 	}
 }
+
+func TestUnit(t *testing.T) {
+	var tests = []struct {
+		name  string
+		input Vector3
+		want  Vector3
+	}{
+		{"Should find unit vector", vec3{3.0, 4.0, 0.0}, vec3{0.6, 0.8, 0.0}},
+		// TODO: Add more scenarios
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ans := tt.input.UnitVector()
+			assertVector(t, tt.want, ans)
+		})
+	}
+}
