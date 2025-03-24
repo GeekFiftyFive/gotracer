@@ -76,7 +76,7 @@ func (v vec3) DivideFloat(f float64) Vector3 {
 }
 
 func (v vec3) LengthSquared() float64 {
-	return v.x*v.x + v.y*v.y + v.z + v.z
+	return v.x*v.x + v.y*v.y + v.z*v.z
 }
 
 func (v vec3) Length() float64 {
