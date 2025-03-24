@@ -59,3 +59,41 @@ func TestSubtractVector(t *testing.T) {
 		})
 	}
 }
+
+func TestMultiplyVector(t *testing.T) {
+	var tests = []struct {
+		name   string
+		input1 Vector3
+		input2 Vector3
+		want   Vector3
+	}{
+		{"Should multiply positive whole vectors", vec3{1.0, 2.0, 3.0}, vec3{2.0, 2.0, 2.0}, vec3{2.0, 4.0, 6.0}},
+		{"Should multiply positive decimal vectors", vec3{1.5, 2.5, 3.5}, vec3{1.5, 1.5, 1.5}, vec3{2.25, 3.75, 5.25}},
+		{"Should multiply negative vectors", vec3{-1.5, -2.5, -3.5}, vec3{1.5, 1.5, 1.5}, vec3{-2.25, -3.75, -5.25}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ans := tt.input1.MultiplyVector(tt.input2)
+			assertVector(t, tt.want, ans)
+		})
+	}
+}
+
+func TestDivideVector(t *testing.T) {
+	var tests = []struct {
+		name   string
+		input1 Vector3
+		input2 Vector3
+		want   Vector3
+	}{
+		{"Should divide positive whole vectors", vec3{1.0, 2.0, 3.0}, vec3{2.0, 2.0, 2.0}, vec3{0.5, 1.0, 1.5}},
+		{"Should divide positive decimal vectors", vec3{1.5, 2.5, 4.5}, vec3{1.5, 2.0, 1.5}, vec3{1.0, 1.25, 3.0}},
+		{"Should divide negative vectors", vec3{-1.5, -2.5, -4.5}, vec3{1.5, 2.0, 1.5}, vec3{-1.0, -1.25, -3.0}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ans := tt.input1.DivideVector(tt.input2)
+			assertVector(t, tt.want, ans)
+		})
+	}
+}
