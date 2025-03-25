@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"gotracer/color"
 	"log"
 	"os"
 )
@@ -14,7 +15,7 @@ func main() {
 	// Image
 	imageWidth, imageHeight := 256, 256
 
-	//Render
+	// Render
 	var writer bytes.Buffer
 	writer.Write(fmt.Appendf(nil, "P3\n%d %d\n255\n", imageWidth, imageHeight))
 
@@ -25,13 +26,9 @@ func main() {
 			g := float64(j) / (float64(imageHeight) - 1)
 			b := float64(0)
 
-			const multiplier float64 = 255.999
+			pixelColor := color.NewColor(r, g, b)
 
-			ir := int(multiplier * r)
-			ig := int(multiplier * g)
-			ib := int(multiplier * b)
-
-			writer.Write(fmt.Appendf(nil, "%d %d %d\n", ir, ig, ib))
+			color.WriteColor(pixelColor, &writer)
 		}
 	}
 
