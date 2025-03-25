@@ -27,6 +27,8 @@ type Vector3 interface {
 	UnitVector() Vector3
 }
 
+type Point3 = Vector3
+
 func NewVector3(x, y, z float64) Vector3 {
 	return vec3{x, y, z}
 }
