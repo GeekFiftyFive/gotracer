@@ -4,16 +4,55 @@ import (
 	"bytes"
 	"fmt"
 	"gotracer/color"
+	"gotracer/ray"
+	"gotracer/vector"
 	"log"
 	"os"
 )
+
+func rayColor(r ray.Ray) color.Color {
+	unitDirection := r.Direction().UnitVector()
+	a := 0.5 * (unitDirection.Y() + 1.0)
+	return color.NewColor(1.0, 1.0, 1.0).
+		AddVector(color.NewColor(0.5, 0.7, 1.0).MultiplyFloat(a)).
+		MultiplyFloat(1.0 - a)
+}
 
 func main() {
 	// Logger
 	logger := log.New(os.Stderr, "", 0)
 
-	// Image
-	imageWidth, imageHeight := 256, 256
+	// Set image parameters
+	aspectRatio := 16.0 / 9.0
+	imageWidth := 400
+
+	// Calculate image height
+	imageHeight := int(float64(imageWidth) / aspectRatio)
+	if imageHeight < 1 {
+		imageHeight = 1
+	}
+
+	// Setup camera
+	focalLength := 1.0
+	viewportHeight := 2.0
+	viewportWidth := viewportHeight * (float64(imageWidth) / float64(imageHeight))
+	var cameraCenter vector.Point3 = vector.NewVector3(0, 0, 0)
+
+	// Calculate the vectors across the horizontal and down the vertical viewport edges
+	viewportU := vector.NewVector3(viewportWidth, 0, 0)
+	viewportV := vector.NewVector3(0, -viewportHeight, 0)
+
+	// Calculate the horizontal and vertical delta vectors from pixel to pixel
+	pixelDeltaU := viewportU.DivideFloat(float64(imageWidth))
+	pixelDeltaV := viewportV.DivideFloat(float64(imageHeight))
+
+	// Calculate the location of the upper left pixel
+	viewportUpperLeft := cameraCenter.
+		SubtractVector(vector.NewVector3(0, 0, focalLength)).
+		SubtractVector(viewportU.DivideFloat(2.0)).
+		SubtractVector(viewportV.DivideFloat(2.0))
+
+	pixel00Loc := viewportUpperLeft.AddVector(pixelDeltaU.AddVector(pixelDeltaV).MultiplyFloat(0.5))
 
 	// Render
 	var writer bytes.Buffer
@@ -22,11 +61,14 @@ func main() {
 	for j := range imageHeight {
 		logger.Printf("Scanlines remaining: %d\n", imageHeight-j)
 		for i := range imageWidth {
-			r := float64(i) / (float64(imageWidth) - 1)
-			g := float64(j) / (float64(imageHeight) - 1)
-			b := float64(0)
+			pixelCenter := pixel00Loc.
+				AddVector(pixelDeltaU.MultiplyFloat(float64(i))).
+				AddVector(pixelDeltaV.MultiplyFloat(float64(j)))
+			rayDirection := pixelCenter.SubtractVector(cameraCenter)
 
-			pixelColor := color.NewColor(r, g, b)
+			r := ray.NewRay(cameraCenter, rayDirection)
+
+			pixelColor := rayColor(r)
 
 			color.WriteColor(pixelColor, &writer)
 		}
