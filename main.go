@@ -14,8 +14,8 @@ func rayColor(r ray.Ray) color.Color {
 	unitDirection := r.Direction().UnitVector()
 	a := 0.5 * (unitDirection.Y() + 1.0)
 	return color.NewColor(1.0, 1.0, 1.0).
-		AddVector(color.NewColor(0.5, 0.7, 1.0).MultiplyFloat(a)).
-		MultiplyFloat(1.0 - a)
+		MultiplyFloat(1.0 - a).
+		AddVector(color.NewColor(0.5, 0.7, 1.0).MultiplyFloat(a))
 }
 
 func main() {
