@@ -18,6 +18,7 @@ type Camera struct {
 	AspectRatio       float64
 	ImageWidth        int
 	SamplesPerPixel   int
+	MaxDepth          int
 	imageHeight       int
 	center            vector.Point3
 	pixel00Loc        vector.Point3
@@ -39,7 +40,7 @@ func (c *Camera) Render(world hittable.Hittable) {
 			pixelColor := color.NewColor(0, 0, 0)
 			for range c.SamplesPerPixel {
 				r := c.getRay(i, j)
-				pixelColor = pixelColor.AddVector(c.rayColor(r, world))
+				pixelColor = pixelColor.AddVector(c.rayColor(r, c.MaxDepth, world))
 			}
 
 			color.WriteColor(pixelColor.MultiplyFloat(c.pixelSamplesScale), &writer)
@@ -80,11 +81,14 @@ func (c *Camera) initialize() {
 	c.pixel00Loc = viewportUpperLeft.AddVector(c.pixelDeltaU.AddVector(c.pixelDeltaV).MultiplyFloat(0.5))
 }
 
-func (c *Camera) rayColor(r ray.Ray, world hittable.Hittable) color.Color {
-	isHit, rec := world.Hit(r, interval.Interval{Min: 0, Max: math.Inf(+1)})
+func (c *Camera) rayColor(r ray.Ray, depth int, world hittable.Hittable) color.Color {
+	if depth <= 0 {
+		return color.NewColor(0, 0, 0)
+	}
+	isHit, rec := world.Hit(r, interval.Interval{Min: 0.001, Max: math.Inf(+1)})
 	if isHit {
-		direction := vector.RandomOnHemisphere(rec.Normal)
-		return c.rayColor(ray.NewRay(rec.P, direction), world).MultiplyFloat(0.5)
+		direction := rec.Normal.AddVector(vector.RandomUnitVector())
+		return c.rayColor(ray.NewRay(rec.P, direction), depth-1, world).MultiplyFloat(0.5)
 	}
 	unitDirection := r.Direction().UnitVector()
 	a := 0.5 * (unitDirection.Y() + 1.0)
