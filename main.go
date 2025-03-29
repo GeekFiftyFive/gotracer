@@ -7,23 +7,28 @@ import (
 	"gotracer/ray"
 	"gotracer/vector"
 	"log"
+	"math"
 	"os"
 )
 
-func hitSphere(center vector.Point3, radius float64, r ray.Ray) bool {
+func hitSphere(center vector.Point3, radius float64, r ray.Ray) float64 {
 	oc := center.SubtractVector(r.Origin())
 	a := r.Direction().Dot(r.Direction())
 	b := r.Direction().Dot(oc) * -2.0
 	c := oc.Dot(oc) - (radius * radius)
 	discriminant := b*b - 4*a*c
-	return discriminant >= 0
+	if discriminant < 0 {
+		return -1.0
+	}
+	return (-b - math.Sqrt(discriminant)) / (2.0 * a)
 }
 
 func rayColor(r ray.Ray) color.Color {
-	if hitSphere(vector.NewVector3(0, 0, -1), 0.5, r) {
-		return color.NewColor(1, 0, 0)
+	t := hitSphere(vector.NewVector3(0, 0, -1), 0.5, r)
+	if t > 0.0 {
+		n := r.At(t).SubtractVector(vector.NewVector3(0, 0, -1)).UnitVector()
+		return color.NewColor(n.X()+1, n.Y()+1, n.Z()+1).MultiplyFloat(0.5)
 	}
-
 	unitDirection := r.Direction().UnitVector()
 	a := 0.5 * (unitDirection.Y() + 1.0)
 	return color.NewColor(1.0, 1.0, 1.0).
