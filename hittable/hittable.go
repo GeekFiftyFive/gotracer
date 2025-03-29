@@ -1,6 +1,7 @@
 package hittable
 
 import (
+	"gotracer/interval"
 	"gotracer/ray"
 	"gotracer/vector"
 )
@@ -13,7 +14,7 @@ type HitRecord struct {
 }
 
 type Hittable = interface {
-	Hit(r ray.Ray, rayTMin float64, rayTMax float64) (isHit bool, rec *HitRecord)
+	Hit(r ray.Ray, rayT interval.Interval) (isHit bool, rec *HitRecord)
 }
 
 func (rec *HitRecord) SetFaceNormal(r ray.Ray, outwardNormal vector.Vector3) {
@@ -40,10 +41,10 @@ func (hl *HittableList) Add(h Hittable) {
 	hl.objects = append(hl.objects, h)
 }
 
-func (hl *HittableList) Hit(r ray.Ray, rayTMin float64, rayTMax float64) (hitAnything bool, rec *HitRecord) {
-	closestSoFar := rayTMax
+func (hl *HittableList) Hit(r ray.Ray, rayT interval.Interval) (hitAnything bool, rec *HitRecord) {
+	closestSoFar := rayT.Max
 	for _, obj := range hl.objects {
-		isHit, tempRec := obj.Hit(r, rayTMin, closestSoFar)
+		isHit, tempRec := obj.Hit(r, interval.Interval{Min: rayT.Min, Max: closestSoFar})
 		if isHit {
 			hitAnything = true
 			closestSoFar = tempRec.T
