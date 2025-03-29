@@ -83,7 +83,8 @@ func (c *Camera) initialize() {
 func (c *Camera) rayColor(r ray.Ray, world hittable.Hittable) color.Color {
 	isHit, rec := world.Hit(r, interval.Interval{Min: 0, Max: math.Inf(+1)})
 	if isHit {
-		return rec.Normal.AddVector(color.NewColor(1, 1, 1)).MultiplyFloat(0.5)
+		direction := vector.RandomOnHemisphere(rec.Normal)
+		return c.rayColor(ray.NewRay(rec.P, direction), world).MultiplyFloat(0.5)
 	}
 	unitDirection := r.Direction().UnitVector()
 	a := 0.5 * (unitDirection.Y() + 1.0)

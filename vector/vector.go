@@ -1,6 +1,9 @@
 package vector
 
-import "math"
+import (
+	"gotracer/utils"
+	"math"
+)
 
 type vec3 struct {
 	x float64
@@ -31,6 +34,33 @@ type Point3 = Vector3
 
 func NewVector3(x, y, z float64) Vector3 {
 	return vec3{x, y, z}
+}
+
+func Random() Vector3 {
+	return vec3{x: utils.RandomFloat(), y: utils.RandomFloat(), z: utils.RandomFloat()}
+}
+
+func RandomRange(min float64, max float64) Vector3 {
+	return vec3{x: utils.RandomRange(min, max), y: utils.RandomRange(min, max), z: utils.RandomRange(min, max)}
+}
+
+func RandomUnitVector() Vector3 {
+	for {
+		p := RandomRange(-1, 1)
+		lensq := p.LengthSquared()
+		if 1e-160 < lensq && lensq <= 1 {
+			return p.DivideFloat(math.Sqrt(lensq))
+		}
+	}
+}
+
+func RandomOnHemisphere(normal Vector3) Vector3 {
+	onUnitSphere := RandomUnitVector()
+	if onUnitSphere.Dot(normal) > 0.0 { // In the same hemisphere as the normal
+		return onUnitSphere
+	} else {
+		return onUnitSphere.MultiplyFloat(-1)
+	}
 }
 
 func (v vec3) X() float64 {
