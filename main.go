@@ -14,7 +14,7 @@ func main() {
 
 	materialGround := material.NewLambertian(color.NewColor(0.8, 0.8, 0.0))
 	materialCenter := material.NewLambertian(color.NewColor(0.1, 0.2, 0.5))
-	materialLeft := material.NewMetal(color.NewColor(0.8, 0.8, 0.8), 0.3)
+	materialLeft := material.NewDialectric(1.5)
 	materialRight := material.NewMetal(color.NewColor(0.8, 0.6, 0.2), 1.0)
 
 	sphereGround := sphere.NewSphere(vector.NewVector3(0.0, -100.5, -1.0), 100.0, &materialGround)

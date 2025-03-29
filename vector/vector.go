@@ -68,6 +68,13 @@ func Reflect(v Vector3, n Vector3) Vector3 {
 	return v.SubtractVector(n.MultiplyFloat(v.Dot(n) * 2))
 }
 
+func Refract(uv Vector3, n Vector3, etaiOverEtat float64) Vector3 {
+	cosTheta := math.Min(uv.MultiplyFloat(-1).Dot(n), 1)
+	rOutPerp := uv.AddVector(n.MultiplyFloat(cosTheta)).MultiplyFloat(etaiOverEtat)
+	rOutParallel := n.MultiplyFloat(-math.Sqrt(math.Abs(1.0 - rOutPerp.LengthSquared())))
+	return rOutPerp.AddVector(rOutParallel)
+}
+
 func (v vec3) X() float64 {
 	return v.x
 }
