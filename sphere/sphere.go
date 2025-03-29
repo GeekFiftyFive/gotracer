@@ -16,7 +16,7 @@ func NewSphere(center vector.Point3, radius float64) Sphere {
 	return Sphere{Center: center, Radius: math.Max(0, radius)}
 }
 
-func (s Sphere) Hit(r ray.Ray, rayTMin float64, rayTMax float64) (isHit bool, rec *hittable.HitRecord) {
+func (s *Sphere) Hit(r ray.Ray, rayTMin float64, rayTMax float64) (isHit bool, rec *hittable.HitRecord) {
 	oc := s.Center.SubtractVector(r.Origin())
 	a := r.Direction().LengthSquared()
 	h := r.Direction().Dot(oc)
@@ -36,6 +36,7 @@ func (s Sphere) Hit(r ray.Ray, rayTMin float64, rayTMax float64) (isHit bool, re
 		}
 	}
 
+	isHit = true
 	rec = &hittable.HitRecord{}
 	rec.T = root
 	rec.P = r.At(rec.T)

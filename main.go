@@ -4,30 +4,19 @@ import (
 	"bytes"
 	"fmt"
 	"gotracer/color"
+	"gotracer/hittable"
 	"gotracer/ray"
+	"gotracer/sphere"
 	"gotracer/vector"
 	"log"
 	"math"
 	"os"
 )
 
-func hitSphere(center vector.Point3, radius float64, r ray.Ray) float64 {
-	oc := center.SubtractVector(r.Origin())
-	a := r.Direction().LengthSquared()
-	h := r.Direction().Dot(oc)
-	c := oc.LengthSquared() - radius*radius
-	discriminant := h*h - a*c
-	if discriminant < 0 {
-		return -1.0
-	}
-	return (h - math.Sqrt(discriminant)) / a
-}
-
-func rayColor(r ray.Ray) color.Color {
-	t := hitSphere(vector.NewVector3(0, 0, -1), 0.5, r)
-	if t > 0.0 {
-		n := r.At(t).SubtractVector(vector.NewVector3(0, 0, -1)).UnitVector()
-		return color.NewColor(n.X()+1, n.Y()+1, n.Z()+1).MultiplyFloat(0.5)
+func rayColor(r ray.Ray, world hittable.Hittable) color.Color {
+	isHit, rec := world.Hit(r, 0, math.Inf(+1))
+	if isHit {
+		return rec.Normal.AddVector(color.NewColor(1, 1, 1)).MultiplyFloat(0.5)
 	}
 	unitDirection := r.Direction().UnitVector()
 	a := 0.5 * (unitDirection.Y() + 1.0)
@@ -46,6 +35,13 @@ func main() {
 
 	// Calculate image height
 	imageHeight := max(int(float64(imageWidth)/aspectRatio), 1)
+
+	// World
+	world := hittable.HittableList{}
+	sphere1 := sphere.NewSphere(vector.NewVector3(0, 0, -1), 0.5)
+	sphere2 := sphere.NewSphere(vector.NewVector3(0, -100.5, -1), 100)
+	world.Add(&sphere1)
+	world.Add(&sphere2)
 
 	// Setup camera
 	focalLength := 1.0
@@ -83,7 +79,7 @@ func main() {
 
 			r := ray.NewRay(cameraCenter, rayDirection)
 
-			pixelColor := rayColor(r)
+			pixelColor := rayColor(r, &world)
 
 			color.WriteColor(pixelColor, &writer)
 		}
