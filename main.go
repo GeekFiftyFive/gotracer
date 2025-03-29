@@ -13,14 +13,14 @@ import (
 
 func hitSphere(center vector.Point3, radius float64, r ray.Ray) float64 {
 	oc := center.SubtractVector(r.Origin())
-	a := r.Direction().Dot(r.Direction())
-	b := r.Direction().Dot(oc) * -2.0
-	c := oc.Dot(oc) - (radius * radius)
-	discriminant := b*b - 4*a*c
+	a := r.Direction().LengthSquared()
+	h := r.Direction().Dot(oc)
+	c := oc.LengthSquared() - radius*radius
+	discriminant := h*h - a*c
 	if discriminant < 0 {
 		return -1.0
 	}
-	return (-b - math.Sqrt(discriminant)) / (2.0 * a)
+	return (h - math.Sqrt(discriminant)) / a
 }
 
 func rayColor(r ray.Ray) color.Color {
