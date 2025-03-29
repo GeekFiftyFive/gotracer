@@ -10,7 +10,20 @@ import (
 	"os"
 )
 
+func hitSphere(center vector.Point3, radius float64, r ray.Ray) bool {
+	oc := center.SubtractVector(r.Origin())
+	a := r.Direction().Dot(r.Direction())
+	b := r.Direction().Dot(oc) * -2.0
+	c := oc.Dot(oc) - (radius * radius)
+	discriminant := b*b - 4*a*c
+	return discriminant >= 0
+}
+
 func rayColor(r ray.Ray) color.Color {
+	if hitSphere(vector.NewVector3(0, 0, -1), 0.5, r) {
+		return color.NewColor(1, 0, 0)
+	}
+
 	unitDirection := r.Direction().UnitVector()
 	a := 0.5 * (unitDirection.Y() + 1.0)
 	return color.NewColor(1.0, 1.0, 1.0).
@@ -27,10 +40,7 @@ func main() {
 	imageWidth := 400
 
 	// Calculate image height
-	imageHeight := int(float64(imageWidth) / aspectRatio)
-	if imageHeight < 1 {
-		imageHeight = 1
-	}
+	imageHeight := max(int(float64(imageWidth)/aspectRatio), 1)
 
 	// Setup camera
 	focalLength := 1.0
