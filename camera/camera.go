@@ -7,6 +7,7 @@ import (
 	"gotracer/hittable"
 	"gotracer/interval"
 	"gotracer/ray"
+	"gotracer/utils"
 	"gotracer/vector"
 	"log"
 	"math"
@@ -14,13 +15,15 @@ import (
 )
 
 type Camera struct {
-	AspectRatio float64
-	ImageWidth  int
-	imageHeight int
-	center      vector.Point3
-	pixel00Loc  vector.Point3
-	pixelDeltaU vector.Vector3
-	pixelDeltaV vector.Vector3
+	AspectRatio       float64
+	ImageWidth        int
+	SamplesPerPixel   int
+	imageHeight       int
+	center            vector.Point3
+	pixel00Loc        vector.Point3
+	pixelDeltaU       vector.Vector3
+	pixelDeltaV       vector.Vector3
+	pixelSamplesScale float64
 }
 
 func (c *Camera) Render(world hittable.Hittable) {
@@ -33,16 +36,13 @@ func (c *Camera) Render(world hittable.Hittable) {
 	for j := range c.imageHeight {
 		logger.Printf("Scanlines remaining: %d\n", c.imageHeight-j)
 		for i := range c.ImageWidth {
-			pixelCenter := c.pixel00Loc.
-				AddVector(c.pixelDeltaU.MultiplyFloat(float64(i))).
-				AddVector(c.pixelDeltaV.MultiplyFloat(float64(j)))
-			rayDirection := pixelCenter.SubtractVector(c.center)
+			pixelColor := color.NewColor(0, 0, 0)
+			for range c.SamplesPerPixel {
+				r := c.getRay(i, j)
+				pixelColor = pixelColor.AddVector(c.rayColor(r, world))
+			}
 
-			r := ray.NewRay(c.center, rayDirection)
-
-			pixelColor := c.rayColor(r, world)
-
-			color.WriteColor(pixelColor, &writer)
+			color.WriteColor(pixelColor.MultiplyFloat(c.pixelSamplesScale), &writer)
 		}
 	}
 
@@ -52,6 +52,8 @@ func (c *Camera) Render(world hittable.Hittable) {
 func (c *Camera) initialize() {
 	// Calculate image height
 	c.imageHeight = max(int(float64(c.ImageWidth)/c.AspectRatio), 1)
+
+	c.pixelSamplesScale = 1.0 / float64(c.SamplesPerPixel)
 
 	c.center = vector.NewVector3(0, 0, 0)
 
@@ -88,4 +90,20 @@ func (c *Camera) rayColor(r ray.Ray, world hittable.Hittable) color.Color {
 	return color.NewColor(1.0, 1.0, 1.0).
 		MultiplyFloat(1.0 - a).
 		AddVector(color.NewColor(0.5, 0.7, 1.0).MultiplyFloat(a))
+}
+
+func (c *Camera) getRay(i, j int) ray.Ray {
+	// Construct a camera ray originating from the origin and directed at randomly sampled
+	// point around the pixel location i, j.
+	offset := sampleSquare()
+	pixelSample := c.pixel00Loc.
+		AddVector(c.pixelDeltaU.MultiplyFloat(float64(i) + (offset.X()))).
+		AddVector(c.pixelDeltaV.MultiplyFloat(float64(j) + offset.Y()))
+	rayOrigin := c.center
+	rayDirection := pixelSample.SubtractVector(rayOrigin)
+	return ray.NewRay(rayOrigin, rayDirection)
+}
+
+func sampleSquare() vector.Vector3 {
+	return vector.NewVector3(utils.RandomFloat()-0.5, utils.RandomFloat()-0.5, 0)
 }

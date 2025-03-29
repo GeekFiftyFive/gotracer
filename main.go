@@ -14,6 +14,6 @@ func main() {
 	sphere2 := sphere.NewSphere(vector.NewVector3(0, -100.5, -1), 100)
 	world.Add(&sphere1)
 	world.Add(&sphere2)
-	cam := camera.Camera{AspectRatio: 16.0 / 9.0, ImageWidth: 400}
+	cam := camera.Camera{AspectRatio: 16.0 / 9.0, ImageWidth: 400, SamplesPerPixel: 100}
 	cam.Render(&world)
 }
