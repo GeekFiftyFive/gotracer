@@ -1,27 +1,28 @@
 package sphere
 
 import (
-	"gotracer/hittable"
 	"gotracer/interval"
+	"gotracer/material"
 	"gotracer/ray"
 	"gotracer/vector"
 	"math"
 )
 
 type Sphere struct {
-	Center vector.Point3
-	Radius float64
+	center vector.Point3
+	radius float64
+	mat    material.Material
 }
 
-func NewSphere(center vector.Point3, radius float64) Sphere {
-	return Sphere{Center: center, Radius: math.Max(0, radius)}
+func NewSphere(center vector.Point3, radius float64, mat material.Material) Sphere {
+	return Sphere{center: center, radius: math.Max(0, radius), mat: mat}
 }
 
-func (s *Sphere) Hit(r ray.Ray, rayT interval.Interval) (isHit bool, rec *hittable.HitRecord) {
-	oc := s.Center.SubtractVector(r.Origin())
+func (s *Sphere) Hit(r ray.Ray, rayT interval.Interval) (isHit bool, rec *material.HitRecord) {
+	oc := s.center.SubtractVector(r.Origin())
 	a := r.Direction().LengthSquared()
 	h := r.Direction().Dot(oc)
-	c := oc.LengthSquared() - s.Radius*s.Radius
+	c := oc.LengthSquared() - s.radius*s.radius
 
 	discriminant := h*h - a*c
 	if discriminant < 0 {
@@ -38,10 +39,11 @@ func (s *Sphere) Hit(r ray.Ray, rayT interval.Interval) (isHit bool, rec *hittab
 	}
 
 	isHit = true
-	rec = &hittable.HitRecord{}
+	rec = &material.HitRecord{}
 	rec.T = root
 	rec.P = r.At(rec.T)
-	outwardNormal := rec.P.SubtractVector(s.Center).DivideFloat(s.Radius)
+	outwardNormal := rec.P.SubtractVector(s.center).DivideFloat(s.radius)
 	rec.SetFaceNormal(r, outwardNormal)
+	rec.Mat = s.mat
 	return
 }

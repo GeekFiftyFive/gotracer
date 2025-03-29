@@ -28,6 +28,7 @@ type Vector3 interface {
 	Dot(Vector3) float64
 	Cross(Vector3) Vector3
 	UnitVector() Vector3
+	NearZero() bool
 }
 
 type Point3 = Vector3
@@ -61,6 +62,10 @@ func RandomOnHemisphere(normal Vector3) Vector3 {
 	} else {
 		return onUnitSphere.MultiplyFloat(-1)
 	}
+}
+
+func Reflect(v Vector3, n Vector3) Vector3 {
+	return v.SubtractVector(n.MultiplyFloat(v.Dot(n) * 2))
 }
 
 func (v vec3) X() float64 {
@@ -125,4 +130,10 @@ func (v1 vec3) Cross(v2 Vector3) Vector3 {
 
 func (v vec3) UnitVector() Vector3 {
 	return v.DivideFloat(v.Length())
+}
+
+func (v vec3) NearZero() bool {
+	// Return true if vector is close to 0 in all directions
+	s := 1e-8
+	return math.Abs(v.x) < s && math.Abs(v.y) < s && math.Abs(v.z) < s
 }

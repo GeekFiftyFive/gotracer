@@ -1,4 +1,4 @@
-package hittable
+package material
 
 import (
 	"gotracer/interval"
@@ -9,6 +9,7 @@ import (
 type HitRecord struct {
 	P         vector.Point3
 	Normal    vector.Vector3
+	Mat       Material
 	T         float64
 	FrontFace bool
 }

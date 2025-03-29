@@ -2,18 +2,31 @@ package main
 
 import (
 	"gotracer/camera"
-	"gotracer/hittable"
+	"gotracer/color"
+	"gotracer/material"
 	"gotracer/sphere"
 	"gotracer/vector"
 )
 
 func main() {
 	// World
-	world := hittable.HittableList{}
-	sphere1 := sphere.NewSphere(vector.NewVector3(0, 0, -1), 0.5)
-	sphere2 := sphere.NewSphere(vector.NewVector3(0, -100.5, -1), 100)
-	world.Add(&sphere1)
-	world.Add(&sphere2)
+	world := material.HittableList{}
+
+	materialGround := material.NewLambertian(color.NewColor(0.8, 0.8, 0.0))
+	materialCenter := material.NewLambertian(color.NewColor(0.1, 0.2, 0.5))
+	materialLeft := material.NewMetal(color.NewColor(0.8, 0.8, 0.8))
+	materialRight := material.NewMetal(color.NewColor(0.8, 0.6, 0.2))
+
+	sphereGround := sphere.NewSphere(vector.NewVector3(0.0, -100.5, -1.0), 100.0, &materialGround)
+	sphereCenter := sphere.NewSphere(vector.NewVector3(0.0, 0.0, -1.2), 0.5, &materialCenter)
+	sphereLeft := sphere.NewSphere(vector.NewVector3(-1.0, 0.0, -1.0), 0.5, &materialLeft)
+	sphereRight := sphere.NewSphere(vector.NewVector3(1.0, 0.0, -1.0), 0.5, &materialRight)
+
+	world.Add(&sphereGround)
+	world.Add(&sphereCenter)
+	world.Add(&sphereLeft)
+	world.Add(&sphereRight)
+
 	cam := camera.Camera{AspectRatio: 16.0 / 9.0, ImageWidth: 400, SamplesPerPixel: 100, MaxDepth: 50}
 	cam.Render(&world)
 }

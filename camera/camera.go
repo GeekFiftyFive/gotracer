@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	"gotracer/color"
-	"gotracer/hittable"
 	"gotracer/interval"
+	"gotracer/material"
 	"gotracer/ray"
 	"gotracer/utils"
 	"gotracer/vector"
@@ -27,7 +27,7 @@ type Camera struct {
 	pixelSamplesScale float64
 }
 
-func (c *Camera) Render(world hittable.Hittable) {
+func (c *Camera) Render(world material.Hittable) {
 	logger := log.New(os.Stderr, "", 0) // TODO: Move logger into its own package
 	c.initialize()
 
@@ -81,14 +81,17 @@ func (c *Camera) initialize() {
 	c.pixel00Loc = viewportUpperLeft.AddVector(c.pixelDeltaU.AddVector(c.pixelDeltaV).MultiplyFloat(0.5))
 }
 
-func (c *Camera) rayColor(r ray.Ray, depth int, world hittable.Hittable) color.Color {
+func (c *Camera) rayColor(r ray.Ray, depth int, world material.Hittable) color.Color {
 	if depth <= 0 {
 		return color.NewColor(0, 0, 0)
 	}
 	isHit, rec := world.Hit(r, interval.Interval{Min: 0.001, Max: math.Inf(+1)})
 	if isHit {
-		direction := rec.Normal.AddVector(vector.RandomUnitVector())
-		return c.rayColor(ray.NewRay(rec.P, direction), depth-1, world).MultiplyFloat(0.5)
+		isScatter, scattered, attenuation := rec.Mat.Scatter(r, rec)
+		if isScatter {
+			return c.rayColor(scattered, depth-1, world).MultiplyVector(attenuation)
+		}
+		return color.NewColor(0, 0, 0)
 	}
 	unitDirection := r.Direction().UnitVector()
 	a := 0.5 * (unitDirection.Y() + 1.0)
