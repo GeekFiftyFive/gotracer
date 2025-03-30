@@ -19,6 +19,7 @@ type Camera struct {
 	ImageWidth        int
 	SamplesPerPixel   int
 	MaxDepth          int
+	Fov               float64
 	imageHeight       int
 	center            vector.Point3
 	pixel00Loc        vector.Point3
@@ -60,7 +61,9 @@ func (c *Camera) initialize() {
 
 	// Determine viewport dimensions
 	focalLength := 1.0
-	viewportHeight := 2.0
+	theta := utils.DegreesToRadians(c.Fov)
+	h := math.Tan(theta / 2.0)
+	viewportHeight := 2.0 * h * focalLength
 	viewportWidth := viewportHeight * (float64(c.ImageWidth) / float64(c.imageHeight))
 	var cameraCenter vector.Point3 = vector.NewVector3(0, 0, 0)
 

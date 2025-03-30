@@ -6,30 +6,24 @@ import (
 	"gotracer/material"
 	"gotracer/sphere"
 	"gotracer/vector"
+	"math"
 )
 
 func main() {
 	// World
 	world := material.HittableList{}
 
-	materialGround := material.NewLambertian(color.NewColor(0.8, 0.8, 0.0))
-	materialCenter := material.NewLambertian(color.NewColor(0.1, 0.2, 0.5))
-	materialLeft := material.NewDialectric(1.5)
-	materialBubble := material.NewDialectric(1.0 / 1.5)
-	materialRight := material.NewMetal(color.NewColor(0.8, 0.6, 0.2), 1.0)
+	r := math.Cos(math.Pi / 4.0)
 
-	sphereGround := sphere.NewSphere(vector.NewVector3(0.0, -100.5, -1.0), 100.0, &materialGround)
-	sphereCenter := sphere.NewSphere(vector.NewVector3(0.0, 0.0, -1.2), 0.5, &materialCenter)
-	sphereLeft := sphere.NewSphere(vector.NewVector3(-1.0, 0.0, -1.0), 0.5, &materialLeft)
-	sphereBubble := sphere.NewSphere(vector.NewVector3(-1.0, 0.0, -1.0), 0.4, &materialBubble)
-	sphereRight := sphere.NewSphere(vector.NewVector3(1.0, 0.0, -1.0), 0.5, &materialRight)
+	materialLeft := material.NewLambertian(color.NewColor(0, 0, 1))
+	materialRight := material.NewLambertian(color.NewColor(1, 0, 0))
 
-	world.Add(&sphereGround)
-	world.Add(&sphereCenter)
+	sphereLeft := sphere.NewSphere(vector.NewVector3(-r, 0, -1), r, &materialLeft)
+	sphereRight := sphere.NewSphere(vector.NewVector3(r, 0, -1), r, &materialRight)
+
 	world.Add(&sphereLeft)
-	world.Add(&sphereBubble)
 	world.Add(&sphereRight)
 
-	cam := camera.Camera{AspectRatio: 16.0 / 9.0, ImageWidth: 400, SamplesPerPixel: 100, MaxDepth: 50}
+	cam := camera.Camera{AspectRatio: 16.0 / 9.0, ImageWidth: 400, SamplesPerPixel: 100, MaxDepth: 50, Fov: 90}
 	cam.Render(&world)
 }
