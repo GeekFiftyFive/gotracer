@@ -20,11 +20,17 @@ type Camera struct {
 	SamplesPerPixel   int
 	MaxDepth          int
 	Fov               float64
+	LookFrom          vector.Point3
+	LookAt            vector.Point3
+	Vup               vector.Vector3
 	imageHeight       int
 	center            vector.Point3
 	pixel00Loc        vector.Point3
 	pixelDeltaU       vector.Vector3
 	pixelDeltaV       vector.Vector3
+	u                 vector.Vector3
+	v                 vector.Vector3
+	w                 vector.Vector3
 	pixelSamplesScale float64
 }
 
@@ -57,29 +63,33 @@ func (c *Camera) initialize() {
 
 	c.pixelSamplesScale = 1.0 / float64(c.SamplesPerPixel)
 
-	c.center = vector.NewVector3(0, 0, 0)
+	c.center = c.LookFrom
 
 	// Determine viewport dimensions
-	focalLength := 1.0
+	focalLength := c.LookFrom.SubtractVector(c.LookAt).Length()
 	theta := utils.DegreesToRadians(c.Fov)
 	h := math.Tan(theta / 2.0)
 	viewportHeight := 2.0 * h * focalLength
 	viewportWidth := viewportHeight * (float64(c.ImageWidth) / float64(c.imageHeight))
-	var cameraCenter vector.Point3 = vector.NewVector3(0, 0, 0)
+
+	// Calculate the u,v,w unit basis vectors for the camera coordinate frame.
+	w := c.LookFrom.SubtractVector(c.LookAt).UnitVector()
+	u := c.Vup.Cross(w).UnitVector()
+	v := w.Cross(u)
 
 	// Calculate the vectors across the horizontal and down the vertical viewport edges
-	viewportU := vector.NewVector3(viewportWidth, 0, 0)
-	viewportV := vector.NewVector3(0, -viewportHeight, 0)
+	viewportU := u.MultiplyFloat(viewportWidth)
+	viewportV := v.MultiplyFloat(-1 * viewportHeight)
 
 	// Calculate the horizontal and vertical delta vectors from pixel to pixel
 	c.pixelDeltaU = viewportU.DivideFloat(float64(c.ImageWidth))
 	c.pixelDeltaV = viewportV.DivideFloat(float64(c.imageHeight))
 
 	// Calculate the location of the upper left pixel
-	viewportUpperLeft := cameraCenter.
-		SubtractVector(vector.NewVector3(0, 0, focalLength)).
-		SubtractVector(viewportU.DivideFloat(2.0)).
-		SubtractVector(viewportV.DivideFloat(2.0))
+	viewportUpperLeft := c.center.
+		SubtractVector(w.MultiplyFloat(focalLength)).
+		SubtractVector(viewportU.DivideFloat(2)).
+		SubtractVector(viewportV.DivideFloat(2))
 
 	c.pixel00Loc = viewportUpperLeft.AddVector(c.pixelDeltaU.AddVector(c.pixelDeltaV).MultiplyFloat(0.5))
 }
