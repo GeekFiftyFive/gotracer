@@ -5,6 +5,7 @@ import (
 	"gotracer/color"
 	"gotracer/material"
 	"gotracer/sphere"
+	"gotracer/utils"
 	"gotracer/vector"
 )
 
@@ -12,35 +13,64 @@ func main() {
 	// World
 	world := material.HittableList{}
 
-	materialGround := material.NewLambertian(color.NewColor(0.8, 0.8, 0.0))
-	materialCenter := material.NewLambertian(color.NewColor(0.1, 0.2, 0.5))
-	materialLeft := material.NewDialectric(1.5)
-	materialBubble := material.NewDialectric(1.0 / 1.5)
-	materialRight := material.NewMetal(color.NewColor(0.8, 0.6, 0.2), 1.0)
+	groundMaterial := material.NewLambertian(color.NewColor(0.5, 0.5, 0.5))
+	groundSphere := sphere.NewSphere(vector.NewVector3(0, -1000, 0), 1000, &groundMaterial)
+	world.Add(&groundSphere)
 
-	sphereGround := sphere.NewSphere(vector.NewVector3(0.0, -100.5, -1.0), 100.0, &materialGround)
-	sphereCenter := sphere.NewSphere(vector.NewVector3(0.0, 0.0, -1.2), 0.5, &materialCenter)
-	sphereLeft := sphere.NewSphere(vector.NewVector3(-1.0, 0.0, -1.0), 0.5, &materialLeft)
-	sphereBubble := sphere.NewSphere(vector.NewVector3(-1.0, 0.0, -1.0), 0.4, &materialBubble)
-	sphereRight := sphere.NewSphere(vector.NewVector3(1.0, 0.0, -1.0), 0.5, &materialRight)
+	for i := range 22 {
+		a := float64(i - 11)
+		for j := range 22 {
+			b := float64(j - 11)
+			chooseMat := utils.RandomFloat()
+			center := vector.NewVector3(a+0.9*utils.RandomFloat(), 0.2, b+0.9*utils.RandomFloat())
 
-	world.Add(&sphereGround)
-	world.Add(&sphereCenter)
-	world.Add(&sphereLeft)
-	world.Add(&sphereBubble)
-	world.Add(&sphereRight)
+			if center.SubtractVector(vector.NewVector3(4, 0.2, 0)).Length() > 0.9 {
+				var sphereMaterial material.Material
+				if chooseMat < 0.9 {
+					// Diffuse
+					albedo := color.Random().MultiplyVector(color.Random())
+					lambertian := material.NewLambertian(albedo)
+					sphereMaterial = &lambertian
+				} else if chooseMat < 0.95 {
+					// Metal
+					albedo := color.RandomRange(0.5, 1)
+					fuzz := utils.RandomRange(0, 0.5)
+					metal := material.NewMetal(albedo, fuzz)
+					sphereMaterial = &metal
+				} else {
+					// Glass
+					glass := material.NewDialectric(1.5)
+					sphereMaterial = &glass
+				}
+				sphere := sphere.NewSphere(center, 0.2, sphereMaterial)
+				world.Add(&sphere)
+			}
+		}
+	}
+
+	material1 := material.NewDialectric(1.5)
+	sphere1 := sphere.NewSphere(vector.NewVector3(0, 1, 0), 1.0, &material1)
+	world.Add(&sphere1)
+
+	material2 := material.NewLambertian(color.NewColor(0.4, 0.2, 0.1))
+	sphere2 := sphere.NewSphere(vector.NewVector3(-4, 1, 0), 1.0, &material2)
+	world.Add(&sphere2)
+
+	material3 := material.NewMetal(color.NewColor(0.7, 0.6, 0.5), 0.0)
+	sphere3 := sphere.NewSphere(vector.NewVector3(4, 1, 0), 1.0, &material3)
+	world.Add(&sphere3)
 
 	cam := camera.Camera{
 		AspectRatio:     16.0 / 9.0,
 		ImageWidth:      400,
-		SamplesPerPixel: 100,
+		SamplesPerPixel: 10,
 		MaxDepth:        50,
 		Fov:             20,
-		LookFrom:        vector.NewVector3(-2, 2, 1),
-		LookAt:          vector.NewVector3(0, 0, -1),
+		LookFrom:        vector.NewVector3(13, 2, 3),
+		LookAt:          vector.NewVector3(0, 0, 0),
 		Vup:             vector.NewVector3(0, 1, 0),
-		DefocusAngle:    10.0,
-		FocusDist:       3.4,
+		DefocusAngle:    0.6,
+		FocusDist:       10.0,
 	}
 	cam.Render(&world)
 }

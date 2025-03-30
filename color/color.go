@@ -36,3 +36,11 @@ func WriteColor(color Color, buffer *bytes.Buffer) {
 
 	buffer.Write(fmt.Appendf(nil, "%d %d %d\n", rbyte, gbyte, bbyte))
 }
+
+func Random() Color {
+	return vector.Random()
+}
+
+func RandomRange(min float64, max float64) Color {
+	return vector.RandomRange(min, max)
+}
