@@ -23,6 +23,8 @@ type Camera struct {
 	LookFrom          vector.Point3
 	LookAt            vector.Point3
 	Vup               vector.Vector3
+	DefocusAngle      float64
+	FocusDist         float64
 	imageHeight       int
 	center            vector.Point3
 	pixel00Loc        vector.Point3
@@ -31,6 +33,8 @@ type Camera struct {
 	u                 vector.Vector3
 	v                 vector.Vector3
 	w                 vector.Vector3
+	defocusDiskU      vector.Vector3
+	defocusDiskV      vector.Vector3
 	pixelSamplesScale float64
 }
 
@@ -66,10 +70,9 @@ func (c *Camera) initialize() {
 	c.center = c.LookFrom
 
 	// Determine viewport dimensions
-	focalLength := c.LookFrom.SubtractVector(c.LookAt).Length()
 	theta := utils.DegreesToRadians(c.Fov)
 	h := math.Tan(theta / 2.0)
-	viewportHeight := 2.0 * h * focalLength
+	viewportHeight := 2.0 * h * c.FocusDist
 	viewportWidth := viewportHeight * (float64(c.ImageWidth) / float64(c.imageHeight))
 
 	// Calculate the u,v,w unit basis vectors for the camera coordinate frame.
@@ -87,11 +90,16 @@ func (c *Camera) initialize() {
 
 	// Calculate the location of the upper left pixel
 	viewportUpperLeft := c.center.
-		SubtractVector(w.MultiplyFloat(focalLength)).
+		SubtractVector(w.MultiplyFloat(c.FocusDist)).
 		SubtractVector(viewportU.DivideFloat(2)).
 		SubtractVector(viewportV.DivideFloat(2))
 
 	c.pixel00Loc = viewportUpperLeft.AddVector(c.pixelDeltaU.AddVector(c.pixelDeltaV).MultiplyFloat(0.5))
+
+	// Calculate the camera defocus disk basis vectors
+	defocusRadius := c.FocusDist * math.Tan(utils.DegreesToRadians(c.DefocusAngle/2))
+	c.defocusDiskU = u.MultiplyFloat(defocusRadius)
+	c.defocusDiskV = v.MultiplyFloat(defocusRadius)
 }
 
 func (c *Camera) rayColor(r ray.Ray, depth int, world material.Hittable) color.Color {
@@ -114,15 +122,26 @@ func (c *Camera) rayColor(r ray.Ray, depth int, world material.Hittable) color.C
 }
 
 func (c *Camera) getRay(i, j int) ray.Ray {
-	// Construct a camera ray originating from the origin and directed at randomly sampled
-	// point around the pixel location i, j.
+	// Construct a camera ray originating from the defocus disk and directed at a randomly
+	// sampled point around the pixel location i, j.
 	offset := sampleSquare()
 	pixelSample := c.pixel00Loc.
 		AddVector(c.pixelDeltaU.MultiplyFloat(float64(i) + (offset.X()))).
 		AddVector(c.pixelDeltaV.MultiplyFloat(float64(j) + offset.Y()))
-	rayOrigin := c.center
+	var rayOrigin vector.Vector3
+	if c.DefocusAngle <= 0 {
+		rayOrigin = c.center
+	} else {
+		rayOrigin = c.defocusDiskSample()
+	}
 	rayDirection := pixelSample.SubtractVector(rayOrigin)
 	return ray.NewRay(rayOrigin, rayDirection)
+}
+
+func (c *Camera) defocusDiskSample() vector.Point3 {
+	// Returns a random point in the camera defocus disk
+	p := vector.RandomInUnitDisk()
+	return c.center.AddVector(c.defocusDiskU.MultiplyFloat(p.X())).AddVector(c.defocusDiskV.MultiplyFloat(p.Y()))
 }
 
 func sampleSquare() vector.Vector3 {

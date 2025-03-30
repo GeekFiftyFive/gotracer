@@ -64,6 +64,15 @@ func RandomOnHemisphere(normal Vector3) Vector3 {
 	}
 }
 
+func RandomInUnitDisk() Vector3 {
+	for {
+		p := vec3{x: utils.RandomRange(-1, 1), y: utils.RandomRange(-1, 1), z: 0}
+		if p.LengthSquared() < 1 {
+			return p
+		}
+	}
+}
+
 func Reflect(v Vector3, n Vector3) Vector3 {
 	return v.SubtractVector(n.MultiplyFloat(v.Dot(n) * 2))
 }
