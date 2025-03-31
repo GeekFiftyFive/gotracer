@@ -62,8 +62,8 @@ func main() {
 
 	cam := camera.Camera{
 		AspectRatio:     16.0 / 9.0,
-		ImageWidth:      400,
-		SamplesPerPixel: 10,
+		ImageWidth:      1200,
+		SamplesPerPixel: 500,
 		MaxDepth:        50,
 		Fov:             20,
 		LookFrom:        vector.NewVector3(13, 2, 3),
