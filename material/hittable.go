@@ -52,6 +52,5 @@ func (hl *HittableList) Hit(r ray.Ray, rayT interval.Interval) (hitAnything bool
 			rec = tempRec
 		}
 	}
-
 	return
 }
