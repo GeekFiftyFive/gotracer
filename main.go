@@ -12,12 +12,12 @@ func main() {
 	// World
 	world := material.HittableList{}
 
-	// groundMaterial := material.NewLambertian(color.NewColor(0.5, 0.5, 0.5))
-	cuboidMaterial := material.NewLambertian(color.NewColor(1, 0, 0))
-	// groundSphere := geometry.NewSphere(vector.NewVector3(0, -1000, 0), 1000, &groundMaterial)
-	// world.Add(&groundSphere)
+	groundMaterial := material.NewLambertian(color.NewColor(0.5, 0.5, 0.5))
+	cuboidMaterial := material.NewDialectric(1.5)
+	groundSphere := geometry.NewSphere(vector.NewVector3(0, -1000, 0), 1000, &groundMaterial)
+	world.Add(&groundSphere)
 
-	cuboid := geometry.NewCuboid(vector.NewVector3(0, 1, 0), vector.NewVector3(-1, 0, -1), &cuboidMaterial)
+	cuboid := geometry.NewCuboid(vector.NewVector3(2, 1, 1), vector.NewVector3(3, 2, 2), &cuboidMaterial)
 	world.Add(&cuboid)
 
 	// for i := range 22 {
@@ -51,9 +51,9 @@ func main() {
 	// 	}
 	// }
 
-	// material1 := material.NewDialectric(1.5)
-	// sphere1 := geometry.NewSphere(vector.NewVector3(0, 1, 0), 1.0, &material1)
-	// world.Add(&sphere1)
+	material1 := material.NewDialectric(1.5)
+	sphere1 := geometry.NewSphere(vector.NewVector3(0, 1, 0), 1.0, &material1)
+	world.Add(&sphere1)
 
 	// material2 := material.NewLambertian(color.NewColor(0.4, 0.2, 0.1))
 	// sphere2 := geometry.NewSphere(vector.NewVector3(-4, 1, 0), 1.0, &material2)

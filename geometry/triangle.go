@@ -3,7 +3,6 @@ package geometry
 import (
 	"gotracer/interval"
 	"gotracer/material"
-	"gotracer/matrix"
 	"gotracer/ray"
 	"gotracer/vector"
 	"math"
@@ -21,54 +20,46 @@ func NewTriangle(v1, v2, v3 vector.Point3, mat material.Material) Triangle {
 }
 
 func (tri *Triangle) Hit(r ray.Ray, rayT interval.Interval) (isHit bool, rec *material.HitRecord) {
-	normal := tri.v1.SubtractVector(tri.v2).Cross(tri.v3.SubtractVector(tri.v1))
-	dot := r.Direction().Dot(normal)
-	if math.Abs(dot) < 0.001 { // Account for floating point error
-		// Ray and Plane tri sits on are parallel, no intersection
+	epsilon := math.Nextafter(1, 2) - 1
+
+	direction := r.Direction().UnitVector()
+	edge1 := tri.v2.SubtractVector(tri.v1)
+	edge2 := tri.v3.SubtractVector(tri.v1)
+	rayCrossE2 := direction.Cross(edge2)
+	det := edge1.Dot(rayCrossE2)
+
+	if det > -epsilon && det < epsilon {
 		return
 	}
 
-	matA := matrix.NewMatrix3(r.Direction().MultiplyFloat(-1), tri.v2.SubtractVector(tri.v1), tri.v3.SubtractVector(tri.v1))
-	detA := matA.Determinant()
+	invDet := 1.0 / det
+	s := r.Origin().SubtractVector(tri.v1)
+	u := s.Dot(rayCrossE2) * invDet
 
-	u := matrix.NewMatrix3(r.Direction().MultiplyFloat(-1), r.Origin().SubtractVector(tri.v1), tri.v3.SubtractVector(tri.v1)).Determinant() / detA
-	v := matrix.NewMatrix3(r.Direction().MultiplyFloat(-1), tri.v2.SubtractVector(tri.v1), r.Origin().SubtractVector(tri.v1)).Determinant() / detA
-
-	if (v < 0 && math.Abs(v) > 0.001) || (u+v > 1 && math.Abs(u+v-1) > 0.001) {
+	if (u < 0 && math.Abs(u) > epsilon) || (u > 1 && math.Abs(u-1) > epsilon) {
 		return
 	}
 
-	t := matrix.NewMatrix3(r.Origin().SubtractVector(tri.v1), tri.v2.SubtractVector(tri.v1), tri.v3.SubtractVector(tri.v1)).Determinant() / detA
+	sCrossE1 := s.Cross(edge1)
+	v := invDet * direction.Dot(sCrossE1)
 
-	if t < 0.001 {
+	if (v < 0 && math.Abs(v) > epsilon) || (u+v > 1 && math.Abs(u+v-1) > epsilon) {
 		return
 	}
+
+	t := invDet * edge2.Dot(sCrossE1)
+
+	if t <= epsilon {
+		return
+	}
+
+	normal := edge1.Cross(edge2).UnitVector()
+
 	isHit = true
 	rec = &material.HitRecord{}
-	rec.T = t
-	rec.P = r.At(t)
+	rec.T = -t
+	rec.P = r.At(rec.T)
 	rec.SetFaceNormal(r, normal)
 	rec.Mat = tri.mat
 	return
-}
-
-func pointInTriangle(point vector.Point3, triangle Triangle) bool {
-	p := point
-	a := triangle.v1
-	b := triangle.v2
-	c := triangle.v3
-
-	a = a.SubtractVector(p)
-	b = b.SubtractVector(p)
-	c = c.SubtractVector(p)
-
-	u := b.Cross(c)
-	v := c.Cross(a)
-	w := a.Cross(b)
-
-	if u.Dot(v) < 0 || u.Dot(w) < 0 {
-		return false
-	}
-
-	return true
 }
