@@ -4,11 +4,14 @@ import (
 	"fmt"
 	"gotracer/material"
 	"gotracer/vector"
+	"log"
+	"os"
 )
 
 type Cuboid = material.HittableList
 
 func NewCuboid(v1, v2 vector.Point3, mat material.Material) Cuboid {
+	logger := log.New(os.Stderr, "", 0) // TODO: Move logger into its own package
 	cuboid := Cuboid{}
 	points := []vector.Point3{}
 	faces := make(map[string][]vector.Point3)
@@ -48,7 +51,8 @@ func NewCuboid(v1, v2 vector.Point3, mat material.Material) Cuboid {
 			// This is a complete face, calculate the tris
 			if len(face) == 4 {
 				tri1 := NewTriangle(face[0], face[1], face[2], mat)
-				tri2 := NewTriangle(face[3], face[1], face[2], mat)
+				tri2 := NewTriangle(face[1], face[3], face[2], mat)
+				logger.Print(tri1, tri2)
 				cuboid.Add(&tri1)
 				cuboid.Add(&tri2)
 			}

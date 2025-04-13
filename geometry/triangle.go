@@ -53,12 +53,12 @@ func (tri *Triangle) Hit(r ray.Ray, rayT interval.Interval) (isHit bool, rec *ma
 		return
 	}
 
-	normal := edge1.Cross(edge2).UnitVector()
+	normal := edge2.Cross(edge1).UnitVector()
 
 	isHit = true
 	rec = &material.HitRecord{}
-	rec.T = -t
-	rec.P = r.At(rec.T)
+	rec.T = t
+	rec.P = r.At(-rec.T)
 	rec.SetFaceNormal(r, normal)
 	rec.Mat = tri.mat
 	return
