@@ -1,4 +1,4 @@
-package sphere
+package geometry
 
 import (
 	"gotracer/interval"

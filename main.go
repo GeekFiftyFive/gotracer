@@ -3,8 +3,8 @@ package main
 import (
 	"gotracer/camera"
 	"gotracer/color"
+	"gotracer/geometry"
 	"gotracer/material"
-	"gotracer/sphere"
 	"gotracer/utils"
 	"gotracer/vector"
 )
@@ -14,7 +14,8 @@ func main() {
 	world := material.HittableList{}
 
 	groundMaterial := material.NewLambertian(color.NewColor(0.5, 0.5, 0.5))
-	groundSphere := sphere.NewSphere(vector.NewVector3(0, -1000, 0), 1000, &groundMaterial)
+	geometry.NewCuboid(vector.NewVector3(0, 0, 0), vector.NewVector3(10, 10, 10), &groundMaterial)
+	groundSphere := geometry.NewSphere(vector.NewVector3(0, -1000, 0), 1000, &groundMaterial)
 	world.Add(&groundSphere)
 
 	for i := range 22 {
@@ -42,28 +43,28 @@ func main() {
 					glass := material.NewDialectric(1.5)
 					sphereMaterial = &glass
 				}
-				sphere := sphere.NewSphere(center, 0.2, sphereMaterial)
+				sphere := geometry.NewSphere(center, 0.2, sphereMaterial)
 				world.Add(&sphere)
 			}
 		}
 	}
 
 	material1 := material.NewDialectric(1.5)
-	sphere1 := sphere.NewSphere(vector.NewVector3(0, 1, 0), 1.0, &material1)
+	sphere1 := geometry.NewSphere(vector.NewVector3(0, 1, 0), 1.0, &material1)
 	world.Add(&sphere1)
 
 	material2 := material.NewLambertian(color.NewColor(0.4, 0.2, 0.1))
-	sphere2 := sphere.NewSphere(vector.NewVector3(-4, 1, 0), 1.0, &material2)
+	sphere2 := geometry.NewSphere(vector.NewVector3(-4, 1, 0), 1.0, &material2)
 	world.Add(&sphere2)
 
 	material3 := material.NewMetal(color.NewColor(0.7, 0.6, 0.5), 0.0)
-	sphere3 := sphere.NewSphere(vector.NewVector3(4, 1, 0), 1.0, &material3)
+	sphere3 := geometry.NewSphere(vector.NewVector3(4, 1, 0), 1.0, &material3)
 	world.Add(&sphere3)
 
 	cam := camera.Camera{
 		AspectRatio:     16.0 / 9.0,
-		ImageWidth:      1200,
-		SamplesPerPixel: 500,
+		ImageWidth:      400,
+		SamplesPerPixel: 10,
 		MaxDepth:        50,
 		Fov:             20,
 		LookFrom:        vector.NewVector3(13, 2, 3),
