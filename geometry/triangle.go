@@ -20,11 +20,12 @@ func NewTriangle(v1, v2, v3 vector.Point3, mat material.Material) Triangle {
 }
 
 func (tri *Triangle) Hit(r ray.Ray, rayT interval.Interval) (isHit bool, rec *material.HitRecord) {
-	epsilon := math.Nextafter(1, 2) - 1
+	epsilon := 0.001
 
-	direction := r.Direction().UnitVector()
+	direction := r.Direction()
 	edge1 := tri.v2.SubtractVector(tri.v1)
 	edge2 := tri.v3.SubtractVector(tri.v1)
+	edge3 := tri.v3.SubtractVector(tri.v2)
 	rayCrossE2 := direction.Cross(edge2)
 	det := edge1.Dot(rayCrossE2)
 
@@ -49,17 +50,29 @@ func (tri *Triangle) Hit(r ray.Ray, rayT interval.Interval) (isHit bool, rec *ma
 
 	t := invDet * edge2.Dot(sCrossE1)
 
-	if t <= epsilon {
+	if t <= epsilon || t > rayT.Max || t < rayT.Min {
 		return
 	}
 
-	normal := edge2.Cross(edge1).UnitVector()
+	normal := edge1.Cross(edge3).UnitVector()
 
 	isHit = true
 	rec = &material.HitRecord{}
 	rec.T = t
-	rec.P = r.At(-rec.T)
-	rec.SetFaceNormal(r, normal)
+	rec.P = r.At(rec.T)
+	rec.SetNormal(normal)
 	rec.Mat = tri.mat
 	return
+}
+
+func (tri *Triangle) SetWindingSign(sign int) {
+	ab := tri.v1.SubtractVector(tri.v2)
+	ac := tri.v1.SubtractVector(tri.v3)
+	cross := ab.Cross(ac)
+
+	if sign < 0 && cross.Z() > 0 || sign > 0 && cross.Z() < 0 {
+		swap := tri.v1
+		tri.v1 = tri.v3
+		tri.v3 = swap
+	}
 }

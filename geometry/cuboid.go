@@ -1,81 +1,99 @@
 package geometry
 
 import (
-	"fmt"
 	"gotracer/material"
 	"gotracer/vector"
-	"log"
-	"os"
 )
 
 type Cuboid = material.HittableList
 
+// func NewCuboid(v1, v2 vector.Point3, mat material.Material) Cuboid {
+// 	cuboid := Cuboid{}
+// 	points := []vector.Point3{}
+
+// 	for i := range 8 {
+// 		var x, y, z float64
+// 		if i&1 > 0 {
+// 			x = v2.X()
+// 		} else {
+// 			x = v1.X()
+// 		}
+
+// 		if i&2 > 0 {
+// 			y = v2.Y()
+// 		} else {
+// 			y = v1.Y()
+// 		}
+
+// 		if i&4 > 0 {
+// 			z = v2.Z()
+// 		} else {
+// 			z = v1.Z()
+// 		}
+
+// 		points = append(points, vector.NewVector3(x, y, z))
+// 	}
+
+// 	logger := log.New(os.Stderr, "", 0) // TODO: Move logger into its own package
+
+// 	logger.Print(points)
+
+// 	for idx := range 3 {
+// 		u1 := 1 << idx
+// 		var u2 int
+// 		if u1 == 4 {
+// 			u2 = 1
+// 		} else {
+// 			u2 = u1 << 1
+// 		}
+
+// 		addVert := func(i, j, k int) {
+// 			vert := NewTriangle(points[i], points[j], points[k], mat)
+// 			cuboid.Add(&vert)
+// 		}
+// 		addVert(u2, u1, 0)
+// 		addVert(u1, u2, u1+u2)
+// 		addVert(7-u1, 7-u2, 7)
+// 		addVert(7-u2, 7-u1, 7-(u1+u2))
+// 	}
+// 	return cuboid
+// }
+
 func NewCuboid(v1, v2 vector.Point3, mat material.Material) Cuboid {
-	logger := log.New(os.Stderr, "", 0) // TODO: Move logger into its own package
-	cuboid := Cuboid{}
-	points := []vector.Point3{}
-	faces := make(map[string][]vector.Point3)
-
-	for i := range 8 {
-		var x, y, z float64
-		if i&1 > 0 {
-			x = v2.X()
-		} else {
-			x = v1.X()
-		}
-
-		if i&2 > 0 {
-			y = v2.Y()
-		} else {
-			y = v1.Y()
-		}
-
-		if i&4 > 0 {
-			z = v2.Z()
-		} else {
-			z = v1.Z()
-		}
-
-		points = append(points, vector.NewVector3(x, y, z))
+	vertices := []vector.Vector3{
+		vector.NewVector3(v1.X(), v1.Y(), v1.Z()),
+		vector.NewVector3(v2.X(), v1.Y(), v1.Z()),
+		vector.NewVector3(v2.X(), v2.Y(), v1.Z()),
+		vector.NewVector3(v1.X(), v2.Y(), v1.Z()),
+		vector.NewVector3(v1.X(), v2.Y(), v2.Z()),
+		vector.NewVector3(v2.X(), v2.Y(), v2.Z()),
+		vector.NewVector3(v2.X(), v1.Y(), v2.Z()),
+		vector.NewVector3(v1.X(), v1.Y(), v2.Z()),
+	}
+	getTri := func(i, j, k int) Triangle {
+		return NewTriangle(vertices[i], vertices[j], vertices[k], mat)
 	}
 
-	for _, point := range points {
-		faceKeys := getFaceKeys(v1, v2, point)
-		for _, faceKey := range faceKeys {
-			face := faces[faceKey]
-			if face == nil {
-				face = []vector.Point3{}
-			}
-			face = append(face, point)
-			faces[faceKey] = face
-			// This is a complete face, calculate the tris
-			if len(face) == 4 {
-				tri1 := NewTriangle(face[0], face[1], face[2], mat)
-				tri2 := NewTriangle(face[1], face[3], face[2], mat)
-				logger.Print(tri1, tri2)
-				cuboid.Add(&tri1)
-				cuboid.Add(&tri2)
-			}
-		}
+	triangles := []Triangle{
+		getTri(0, 2, 1),
+		getTri(0, 3, 2),
+		getTri(2, 3, 4),
+		getTri(2, 4, 5),
+		getTri(1, 2, 5),
+		getTri(1, 5, 6),
+		getTri(0, 7, 4),
+		getTri(0, 4, 3),
+		getTri(5, 4, 7),
+		getTri(5, 7, 6),
+		getTri(0, 6, 7),
+		getTri(0, 1, 6),
+	}
+
+	cuboid := Cuboid{}
+
+	for _, triangle := range triangles {
+		cuboid.Add(&triangle)
 	}
 
 	return cuboid
-}
-
-func getFaceKeys(v1, v2, u vector.Point3) (faceKeys []string) {
-	for i, point := range []vector.Point3{v1, v2} {
-		if u.X() == point.X() {
-			faceKeys = append(faceKeys, fmt.Sprintf("x%d", i+1))
-		}
-
-		if u.Y() == point.Y() {
-			faceKeys = append(faceKeys, fmt.Sprintf("y%d", i+1))
-		}
-
-		if u.Z() == point.Z() {
-			faceKeys = append(faceKeys, fmt.Sprintf("z%d", i+1))
-		}
-	}
-
-	return
 }

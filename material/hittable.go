@@ -30,6 +30,11 @@ func (rec *HitRecord) SetFaceNormal(r ray.Ray, outwardNormal vector.Vector3) {
 	}
 }
 
+func (rec *HitRecord) SetNormal(normal vector.Vector3) {
+	rec.FrontFace = true
+	rec.Normal = normal
+}
+
 type HittableList struct {
 	objects []Hittable
 }
